@@ -1,0 +1,12 @@
+{
+    "egosms":{
+        "url":"https://www.egosms.co/api/v1/json/",
+        "username":"kitaroghope",
+        "password":"1@Janerogz",
+        "urlDev":"http://sandbox.egosms.co/api/v1/json/"
+    },
+    "nodemailer":{
+        "user":"kabakamulwa@yandex.com",
+        "password":"hwngjiskbdwsocpu"
+    }
+}
