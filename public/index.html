@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style/style.css">
+    <title>Signup and Login</title>
+</head>
+<body>
+    <div class="container height-100 d-flex justify-content-center align-items-center">
+        <div class="position-relative">
+            <div class="card p-2 text-center" id="form-container">
+                <!-- Dynamic form content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Dialog Box -->
+    <div id="custom-dialog-box" class="modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h5 class="modal-title" id="textH">Confirm</h5>
+            <button type="button" class="close btn-danger" data-dismiss="modal" aria-label="Close" onclick="resolveDialogPromise(false)">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <!-- Modal Body -->
+          <div class="modal-body" id="textB">
+            Are you sure you want to proceed?
+          </div>
+          <!-- Modal Footer -->
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btnClo" data-dismiss="modal" onclick="resolveDialogPromise(false)">No</button>
+            <button type="button" class="btn btn-primary" id="btnAcc" onclick="resolveDialogPromise(true)">Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>  
+</body>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.min.js"></script>
+<script src="js/user.js"></script>
+</html>

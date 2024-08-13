@@ -50,6 +50,46 @@ async function sendSMS(number, message) {
     }
 }
 
+async function checkBalance(){
+    const data = JSON.stringify({
+        "method":"Balance",
+        "userdata":{
+           "username":con.egosms.username,
+           "password":con.egosms.password
+        }
+     });
+
+     const options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: data
+    };
+
+    try {
+        const res = await fetch(con.egosms.url, options);
+        const responseBody = await res.text();
+        console.log(responseBody)
+
+        if (!res.ok) {
+            return {
+                sent: false,
+                data: responseBody
+            };
+        } else {
+            return {
+                sent: true,
+                data: responseBody
+            };
+        }
+    } catch (error) {
+        return {
+            sent: false,
+            data: error.message
+        };
+    }
+}
+
 module.exports = {
-    sendSMS
+    sendSMS,
+    checkBalance
 };

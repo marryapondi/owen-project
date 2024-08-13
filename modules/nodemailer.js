@@ -19,7 +19,7 @@ async function sendOTP(email, message) {
     const mailOptions = {
         from: 'Kita<kabakamulwa@yandex.com>',
         to: email,
-        subject: 'Check',
+        subject: 'Alex Security',
         text: message
     };
 
