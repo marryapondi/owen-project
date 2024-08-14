@@ -30,7 +30,7 @@ async function sendSMS(number, message) {
     try {
         const res = await fetch(url, options);
         const responseBody = await res.text();
-
+        console.log(responseBody)
         if (!res.ok) {
             return {
                 sent: false,

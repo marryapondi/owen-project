@@ -221,7 +221,10 @@ app.post('/verify-phone', async (req, res)=>{
         user.phone = phone;
         await sendOTP1(user, "phone")
         await user.save();
-        return res.json({ success: true, message: "Wow, enter otp on your phone to complete signing up" });
+        return res.json({ success: true, 
+            message: "Wow, enter otp on your phone to complete signing up" ,
+            auth: user.phone
+        });
     } catch (error) {
         return res.json({ success: false, message: 'There was an error, sorry its on our side' });
     }

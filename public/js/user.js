@@ -70,16 +70,7 @@ $(document).ready(function () {
 
     function showOTPConfirmationForm(method="email",email="") {
         if(email !== ""){
-            let emailParts = email.split("@");
-                let localPart = emailParts[0];
-                let domainPart = emailParts[1];
-                if (localPart.length <= 4) {
-                    // If the local part is too short, just replace the middle with *
-                    localPart = localPart.substring(0, 2) + "xx";
-                } else {
-                    localPart = localPart.substring(0, 2) + "xxxx" + localPart.substring(localPart.length - 2);
-                }
-                email = localPart + "@" + domainPart;
+            email = formatAuth(email, method);
         }
         updateFormContainer(`
             <h6>Please enter the code sent <br> to your ${method}.</h6>
@@ -96,26 +87,6 @@ $(document).ready(function () {
     }
 
     function showSecondAuthForm(method="phone", auth="256700000000", secAuth=true) {
-        function formatAuth(auth, method) {
-            if (method === "phone") {
-                // For phone: first 5 characters and last 2 characters, replace the middle with *
-                return auth.substring(0, 5) + "*****" + auth.substring(auth.length - 2);
-            } else if (method === "email") {
-                // For email: first 2 characters, replace middle with *, then show the last 2 characters before @
-                let emailParts = auth.split("@");
-                let localPart = emailParts[0];
-                let domainPart = emailParts[1];
-                if (localPart.length <= 4) {
-                    // If the local part is too short, just replace the middle with *
-                    localPart = localPart.substring(0, 2) + "xx";
-                } else {
-                    localPart = localPart.substring(0, 2) + "xxxx" + localPart.substring(localPart.length - 2);
-                }
-                return localPart + "@" + domainPart;
-            }
-            return auth;
-        }
-    
         if (auth !== "") {
             let formattedAuth = formatAuth(auth, method);
     
@@ -134,6 +105,25 @@ $(document).ready(function () {
         }
     }
     
+    function formatAuth(auth, method) {
+        if (method === "phone") {
+            // For phone: first 5 characters and last 2 characters, replace the middle with *
+            return auth.substring(0, 5) + "*****" + auth.substring(auth.length - 2);
+        } else if (method === "email") {
+            // For email: first 2 characters, replace middle with *, then show the last 2 characters before @
+            let emailParts = auth.split("@");
+            let localPart = emailParts[0];
+            let domainPart = emailParts[1];
+            if (localPart.length <= 4) {
+                // If the local part is too short, just replace the middle with *
+                localPart = localPart.substring(0, 2) + "xx";
+            } else {
+                localPart = localPart.substring(0, 2) + "xxxx" + localPart.substring(localPart.length - 2);
+            }
+            return localPart + "@" + domainPart;
+        }
+        return auth;
+    }
 
     function showPhoneNumberVerificationForm(phone="") {
         updateFormContainer(`
