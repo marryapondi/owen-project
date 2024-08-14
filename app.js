@@ -70,7 +70,7 @@ app.post('/login', async (req, res) => {
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials.' });
 
         if (!user.emailVerified || !user.phoneVerified) {
-            return res.status(403).json({ message: 'Please verify your email and phone number before logging in.', 
+            return res.status(200).json({ message: 'Please verify your email and phone number before logging in.', 
                 userId:user._id.toString(),
                 email:user.email,
                 phone:user.phone,
