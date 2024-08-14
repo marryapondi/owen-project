@@ -189,6 +189,7 @@ $(document).ready(function () {
                 showSecondAuthForm("phone", res.auth, true);
             } else {
                 customAlert(res.message);
+                sessionStorage.setItem('userId', res.userId);
                 if(res.verified && res.eVerified){
                     showOTPConfirmationForm("email",res.email);
                 } else {
