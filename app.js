@@ -47,9 +47,11 @@ app.post('/register', async (req, res) => {
         // await sendSMS(phone, `Your phone verification code is ${phoneOTP}`);
 
         res.status(201).json({ 
-            message: 'Registration successful. Please verify your email and phone.', 
+            message: 'Registration successful. Please verify your email.', 
             success: true, 
-            userId: newUser._id.toString() 
+            userId: newUser._id.toString(),
+            auth: newUser.email,
+            number: newUser.phone
         });
     } catch (error) {
         res.status(500).json({ message: error.message,success:false });
@@ -80,8 +82,9 @@ app.post('/login', async (req, res) => {
         await sendSMS(user.phone, `Your second authentication code is ${secondAuthOTP}`);
 
         res.status(200).json({ 
-        message: 'Second authentication OTP sent. Please verify.', 
-        userId: user._id.toString() 
+            message: 'Second authentication OTP sent. Please verify.', 
+            userId: user._id.toString(),
+            auth: user.phone
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -102,7 +105,7 @@ app.post('/second-auth', async (req, res) => {
             user.secondAuthOTP = null; // Clear OTP after successful second auth
             await user.save();
 
-            res.status(200).json({ token });
+            res.status(200).json({ token, success:true, message:"You have successfully logged in." });
         } else {
             res.status(400).json({ message: 'Invalid OTP.' });
         }

@@ -6,6 +6,7 @@ $(document).ready(function () {
         login: showLoginForm,
         emailVerification: showOTPConfirmationForm,
         phoneVerification: showPhoneNumberVerificationForm,
+        secAuth: showSecondAuthForm
     };
 
 
@@ -67,10 +68,22 @@ $(document).ready(function () {
         updateCurrentStep('login');
     }
 
-    function showOTPConfirmationForm(method="email") {
+    function showOTPConfirmationForm(method="email",email="") {
+        if(email !== ""){
+            let emailParts = email.split("@");
+                let localPart = emailParts[0];
+                let domainPart = emailParts[1];
+                if (localPart.length <= 4) {
+                    // If the local part is too short, just replace the middle with *
+                    localPart = localPart.substring(0, 2) + "xx";
+                } else {
+                    localPart = localPart.substring(0, 2) + "xxxx" + localPart.substring(localPart.length - 2);
+                }
+                email = localPart + "@" + domainPart;
+        }
         updateFormContainer(`
             <h6>Please enter the code sent <br> to your ${method}.</h6>
-            <div> <span>A code has been sent to</span> <small id="email-v">*******0000</small>. </div>
+            <div> <span>A code has been sent to</span> <small id="email-v">${email==""?"*******om":email}</small>. </div>
             <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
                 ${generateOTPInputs(6)}
             </div>
@@ -82,11 +95,51 @@ $(document).ready(function () {
         OTPInput();
     }
 
-    function showPhoneNumberVerificationForm() {
+    function showSecondAuthForm(method="phone", auth="256700000000", secAuth=true) {
+        function formatAuth(auth, method) {
+            if (method === "phone") {
+                // For phone: first 5 characters and last 2 characters, replace the middle with *
+                return auth.substring(0, 5) + "*****" + auth.substring(auth.length - 2);
+            } else if (method === "email") {
+                // For email: first 2 characters, replace middle with *, then show the last 2 characters before @
+                let emailParts = auth.split("@");
+                let localPart = emailParts[0];
+                let domainPart = emailParts[1];
+                if (localPart.length <= 4) {
+                    // If the local part is too short, just replace the middle with *
+                    localPart = localPart.substring(0, 2) + "xx";
+                } else {
+                    localPart = localPart.substring(0, 2) + "xxxx" + localPart.substring(localPart.length - 2);
+                }
+                return localPart + "@" + domainPart;
+            }
+            return auth;
+        }
+    
+        if (auth !== "") {
+            let formattedAuth = formatAuth(auth, method);
+    
+            updateFormContainer(`
+                <h6>Please enter the code sent <br> to your ${method}.</h6>
+                <div> <span>A code has been sent to</span> <small id="email-v">${formattedAuth}</small>. </div>
+                <div id="otp" class="inputs d-flex flex-row justify-content-center mt-2">
+                    ${generateOTPInputs(6)}
+                </div>
+                <div class="mt-4">
+                    <button class="btn btn-danger px-4" id="validate-otp-btn" onclick="handleOTPConfirmation('${method}',true,true)">Validate</button>
+                </div>
+            `);
+            updateCurrentStep('secAuth');
+            OTPInput();
+        }
+    }
+    
+
+    function showPhoneNumberVerificationForm(phone="") {
         updateFormContainer(`
             <h6>Add and Verify Your Phone Number</h6>
             <div class="inputs1 d-flex flex-column justify-content-center mt-2">
-                ${generateInputFields([{ label: 'Phone Number', id: 'phone', type: 'text', required: true }])}
+                ${generateInputFields([{ label: 'Phone Number', id: 'phone', type: 'text', required: true, value:`${phone}` }])}
             </div>
             <div class="mt-4">
                 <button class="btn btn-danger px-4" id="send-verification-code-btn">Send Verification Code</button>
@@ -111,7 +164,7 @@ $(document).ready(function () {
             if (res.success) {
                 sessionStorage.setItem('userId', res.userId);
                 // showOTPForm("email");
-                showOTPConfirmationForm("email");
+                showOTPConfirmationForm("email",res.auth);
             } else {
                 customAlert(res.message);
             }
@@ -133,14 +186,14 @@ $(document).ready(function () {
         processRequest('/login', data, (res) => {
             if (res.message === "Second authentication OTP sent. Please verify.") {
                 sessionStorage.setItem('userId', res.userId);
-                showSecondAuthForm();
+                showSecondAuthForm("phone", res.auth, true);
             } else {
                 customAlert(res.message);
             }
         });
     }
 
-    function handleOTPConfirmation(method,login=false) {
+    function handleOTPConfirmation(method, login=false, secAuth=false) {
         const otp = getOTPValues();
 
         if (otp.length !== 6) {
@@ -148,14 +201,14 @@ $(document).ready(function () {
         }
 
         const data = { userId: sessionStorage.getItem('userId'), otp, method };
-        processRequest('/verify-otp', data, (res) => {
+        processRequest(secAuth ? '/second-auth':'/verify-otp', data, (res) => {
             if (res.success) {
                 customAlert('OTP validated! Proceeding to next step...');
                 if(method == "email"){
-                    showPhoneNumberVerificationForm();
+                    showPhoneNumberVerificationForm(res.number);
                 }else{
                     if(login){
-                        window.location.href = '/'
+                        window.location.href = '/redirect'
                     }else{
                         showLoginForm();
                         customAlert("You can now login");
@@ -167,6 +220,7 @@ $(document).ready(function () {
         });
     }
 
+    
     async function handlePhoneVerification() {
         let phone = await getInputValues(['phone']);
         phone = `${phone.phone}`
@@ -190,7 +244,7 @@ $(document).ready(function () {
         // data['userId'] = sessionStorage.getItem('userId');
         processRequest('/verify-phone', data, (res) => {
             if (res.success) {
-                showOTPConfirmationForm("phone");
+                showOTPConfirmationForm("phone",res.auth);
             } else {
                 customAlert(res.message);
             }
@@ -198,6 +252,7 @@ $(document).ready(function () {
     }
 
     function processRequest(url, data, callback) {
+        customAlert("Please wait...","Loading",true)
         fetch(url, {
             method: 'POST',
             headers: {
@@ -206,6 +261,7 @@ $(document).ready(function () {
             body: JSON.stringify(data)
         })
         .then(response => {
+            hideCustomDialog();
             if (!response.ok) {
                 return response.text().then(text => { throw new Error(text) });
             }
@@ -231,7 +287,7 @@ $(document).ready(function () {
     function generateInputFields(fields) {
         return fields.map(field => `
             <label for="${field.id}">${field.label}:</label>
-            <input class="m-2 form-control rounded" type="${field.type}" id="${field.id}" ${field.required ? 'required' : ''} />
+            <input class="m-2 form-control rounded" type="${field.type}" id="${field.id}" ${field.required ? 'required' : ''} value="${field.value ? field.value : "" }" />
         `).join('');
     }
 
