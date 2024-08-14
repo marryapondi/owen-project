@@ -70,7 +70,13 @@ app.post('/login', async (req, res) => {
         if (!isMatch) return res.status(400).json({ message: 'Invalid credentials.' });
 
         if (!user.emailVerified || !user.phoneVerified) {
-            return res.status(403).json({ message: 'Please verify your email and phone number before logging in.' });
+            return res.status(403).json({ message: 'Please verify your email and phone number before logging in.', 
+                userId:user._id.toString(),
+                email:user.email,
+                phone:user.phone,
+                verified: false,
+                eVerified: user.emailVerified,
+            });
         }
 
         // Generate a new OTP for second authentication
@@ -82,6 +88,7 @@ app.post('/login', async (req, res) => {
         await sendSMS(user.phone, `Your second authentication code is ${secondAuthOTP}`);
 
         res.status(200).json({ 
+            success: true,
             message: 'Second authentication OTP sent. Please verify.', 
             userId: user._id.toString(),
             auth: user.phone

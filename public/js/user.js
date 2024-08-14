@@ -184,11 +184,16 @@ $(document).ready(function () {
         }
 
         processRequest('/login', data, (res) => {
-            if (res.message === "Second authentication OTP sent. Please verify.") {
+            if(res.success){ // (res.message === "Second authentication OTP sent. Please verify.") {
                 sessionStorage.setItem('userId', res.userId);
                 showSecondAuthForm("phone", res.auth, true);
             } else {
                 customAlert(res.message);
+                if(res.verified && res.eVerified){
+                    showOTPConfirmationForm("email",res.email);
+                } else {
+                    showPhoneNumberVerificationForm(res.phone);
+                }
             }
         });
     }
