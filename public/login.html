@@ -73,6 +73,8 @@
             document.getElementById('loginMessage').innerText = result;
 
             if (response.ok) {
+                console.log(sessionStorage.getItem('currentStep'));
+                sessionStorage.setItem('currentStep', "");
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('otpForm').style.display = 'block';
             }
@@ -92,7 +94,7 @@
             document.getElementById('otpMessage').innerText = result;
 
             if (response.ok) {
-                window.location.href = '/dashboard.html';
+                window.location.href = '/private';
             }
         }
 

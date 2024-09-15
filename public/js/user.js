@@ -204,6 +204,7 @@ $(document).ready(function () {
                     showPhoneNumberVerificationForm(res.number);
                 }else{
                     if(login){
+                        updateCurrentStep("");
                         window.location.href = '/redirect'
                     }else{
                         showLoginForm();

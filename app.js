@@ -1,6 +1,6 @@
-// app.js (including second auth routes)
 const express = require('express');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 const { User, Types } = require('./modules/mongoose');
 const { sendOTP } = require('./modules/nodemailer');
 const { sendSMS } = require('./modules/sms');
@@ -9,7 +9,39 @@ const jwt = require('jsonwebtoken');
 const app = express();
 
 app.use(express.json());
+app.use(cookieParser()); // Add cookie-parser middleware
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Your verifyJWT middleware and routes here
+
+const verifyJWT = (req, res, next) => {
+    const token = req.cookies.token; // Get JWT from the 'token' cookie
+
+    if (!token) {
+        // No token provided, redirect to login
+        return res.redirect(`/?redirect=${encodeURIComponent(req.originalUrl)}`);
+    }
+
+    jwt.verify(token, 'secretKey', (err, decoded) => {
+        if (err) {
+            // Invalid token, redirect to login
+            return res.redirect(`/login.html?redirect=${encodeURIComponent(req.originalUrl)}`);
+        }
+
+        // Token is valid, store user information in request
+        req.user = decoded;
+        next();
+    });
+};
+
+// Protect the /private folder
+app.use('/private', verifyJWT, express.static(path.join(__dirname, 'private')));
+
+
+//redirect
+app.get("/redirect", (req, res)=>{
+    res.redirect("/private");
+});
 
 //Register
 app.post('/register', async (req, res) => {
@@ -111,6 +143,13 @@ app.post('/second-auth', async (req, res) => {
             const token = jwt.sign({ id: user._id, username: user.username }, 'secretKey', { expiresIn: '1h' });
             user.secondAuthOTP = null; // Clear OTP after successful second auth
             await user.save();
+
+            res.cookie('token', token, {
+                httpOnly: true,  
+                secure: true,    
+                sameSite: 'Strict', 
+                maxAge: 3600000  
+            });
 
             res.status(200).json({ token, success:true, message:"You have successfully logged in." });
         } else {
@@ -230,6 +269,127 @@ app.post('/verify-phone', async (req, res)=>{
     }
 })
 
+app.get('/logout', (req, res) => {
+    // Clear the JWT token cookie
+    res.cookie('token', '', {
+        httpOnly: true,
+        secure: true,    // Ensure this is set to true if you're using HTTPS
+        sameSite: 'Strict',
+        expires: new Date(0) // Setting the cookie's expiry date to the past
+    });
+    res.redirect('/')
+    // Redirect to login or home page
+    // res.status(200).json({ success: true, message: 'Logged out successfully.' });
+});
+
+
+// const members = [
+//     {
+//       "Surname": "Kitamirike",
+//       "last_name": "Rogers",
+//       "Contact": "256757035774"
+//     },
+//     {
+//       "Surname": "Enid",
+//       "last_name": "Ngobi",
+//       "Contact": "256782939628"
+//     },
+//     {
+//       "Surname": "Kahuju",
+//       "last_name": "Uzziah",
+//       "Contact": "256753759488"
+//     },
+//     {
+//       "Surname": "Tusiime",
+//       "last_name": "Magret",
+//       "Contact": "256750632071"
+//     },
+//     {
+//       "Surname": "Apondi",
+//       "last_name": "Gorrey",
+//       "Contact": "256782422362"
+//     },
+//     {
+//       "Surname": "Nabakooza",
+//       "last_name": "Jane",
+//       "Contact": "256753894213"
+//     },
+//     {
+//       "Surname": "Kaweesi",
+//       "last_name": "Jonathan",
+//       "Contact": "256757037463"
+//     },
+//     {
+//       "Surname": "Tamale",
+//       "last_name": "Isaac",
+//       "Contact": "256755518757"
+//     },
+//     {
+//       "Surname": "Kenyunyuzi",
+//       "last_name": "Florence",
+//       "Contact": "256709628226"
+//     },
+//     {
+//       "Surname": "Ssentongo",
+//       "last_name": "Allan",
+//       "Contact": "256709360910"
+//     },
+//     {
+//       "Surname": "Mudama",
+//       "last_name": "Obadiah",
+//       "Contact": "256754298207"
+//     },
+//     {
+//       "Surname": "Bwanika",
+//       "last_name": "Wilson",
+//       "Contact": "256751622006"
+//     },
+//     {
+//       "Surname": "Wasswa",
+//       "last_name": "Dennis",
+//       "Contact": "256767276417"
+//     },
+//     {
+//       "Surname": "Bagenda",
+//       "last_name": "January",
+//       "Contact": "256713082823"
+//     },
+//     {
+//       "Surname": "Kagongoya",
+//       "last_name": "Best",
+//       "Contact": "256704512015"
+//     },
+//     {
+//       "Surname": "Arora",
+//       "last_name": "Richard",
+//       "Contact": "256755943600"
+//     },
+//     {
+//       "Surname": "Suzan",
+//       "last_name": "Bagenda",
+//       "Contact": "256753942072"
+//     },
+//     {
+//       "Surname": "Mbabaali",
+//       "last_name": "Joseph",
+//       "Contact": "256782680222"
+//     },
+//     {
+//       "Surname": "Kanamwanje",
+//       "last_name": "Daniel",
+//       "Contact": "256758352229"
+//     }
+//   ]
+
+// async function msend(){
+//     for(i = 0; i < members.length; i++){
+//         const message = `Dear ${members[i].last_name}, thank you for attending last church board. Next board meeting is on 13th Oct, 2024.`;
+//         const success = await sendSMS(members[i].Contact,message);
+//         console.log(success.data);
+//     }
+// }
+
+// msend();
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
